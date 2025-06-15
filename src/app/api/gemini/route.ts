@@ -24,6 +24,20 @@ export async function POST(req: NextRequest) {
           ).join('\n') + '\n\n';
         }
 
+        const systemPrompt = `You are an API-focused assistant. You can ONLY answer questions related to:
+1. API endpoints and their usage
+2. Authentication methods and requirements
+3. API usage limits and quotas
+4. Request/response data formats
+5. API documentation and specifications
+6. API integration and implementation
+7. API testing and debugging
+8. API security best practices
+
+For any non-API related questions, respond with: "I apologize, but I can only assist with API-related queries. Please ask me about API endpoints, authentication, usage limits, data formats, or other API-specific topics."
+
+Current user query: ${prompt}`;
+
         let parts;
         if (imageUrl) {
           const response = await fetch(imageUrl);
@@ -37,10 +51,10 @@ export async function POST(req: NextRequest) {
                 mimeType: 'image/jpeg',
               },
             },
-            context + prompt,
+            context + systemPrompt,
           ];
         } else {
-          parts = [context + prompt];
+          parts = [context + systemPrompt];
         }
 
         const result = await model.generateContentStream(parts);
