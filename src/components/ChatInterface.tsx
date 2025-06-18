@@ -98,7 +98,7 @@ export default function ChatInterface({ chatId }: ChatInterfaceProps) {
     // Add user message to chat
     const newUserMessage: Message = {
       id: userMessageId,
-      content: userMessage,
+      content: userMessage || '', // Empty string for image-only messages
       role: 'user',
       imageUrl: previewUrl,
     };
@@ -129,7 +129,7 @@ export default function ChatInterface({ chatId }: ChatInterfaceProps) {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          prompt: userMessage,
+          prompt: userMessage || 'Image query',
           imageUrl,
           messages: messages,
         }),
@@ -179,7 +179,7 @@ export default function ChatInterface({ chatId }: ChatInterfaceProps) {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            title: userMessage.slice(0, 30) + '...',
+            title: userMessage ? userMessage.slice(0, 30) + '...' : 'Image query',
             messages: updatedMessages,
           }),
         });

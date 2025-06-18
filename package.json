@@ -1,9 +1,10 @@
 {
-  "name": "gemini-chat-app",
+  "name": "meet-your-api-chat-app",
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "concurrently \"next dev\" \"npm:remind-pending-reports-cron\"",
+    "remind-pending-reports-cron": "node scripts/remind-pending-reports-cron.js",
     "build": "next build",
     "start": "next start",
     "lint": "next lint"
@@ -17,16 +18,20 @@
     "axios": "^1.6.5",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.0",
+    "concurrently": "^8.2.2",
+    "date-fns": "^4.1.0",
     "framer-motion": "^10.18.0",
     "imagekit": "^4.0.0",
     "lucide-react": "^0.309.0",
     "mongodb": "^6.3.0",
     "mongoose": "^8.0.3",
     "next": "14.2.25",
+    "node-cron": "^3.0.3",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-icons": "^4.12.0",
     "react-markdown": "^10.1.0",
+    "resend": "^4.6.0",
     "tailwind-merge": "^2.2.0"
   },
   "devDependencies": {

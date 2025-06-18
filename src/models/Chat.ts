@@ -1,6 +1,13 @@
 import mongoose from 'mongoose';
 
-const messageSchema = new mongoose.Schema({
+interface IMessage {
+  role: string;
+  content?: string;
+  imageUrl?: string;
+  timestamp: Date;
+}
+
+const messageSchema = new mongoose.Schema<IMessage>({
   role: {
     type: String,
     enum: ['user', 'assistant'],
@@ -8,7 +15,9 @@ const messageSchema = new mongoose.Schema({
   },
   content: {
     type: String,
-    required: true,
+    required: function(this: IMessage) {
+      return !this.imageUrl; // Content is required only if there's no image
+    },
   },
   imageUrl: {
     type: String,
