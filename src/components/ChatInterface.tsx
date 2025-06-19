@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { useUser } from '@clerk/nextjs';
-import { Plus, Send, Image as ImageIcon, X } from 'lucide-react';
+import { Plus, Send, Image as ImageIcon, X, Code2, Sparkles } from 'lucide-react';
 import { uploadImage } from '@/lib/imagekit';
 import ReactMarkdown from 'react-markdown';
 
@@ -90,6 +90,7 @@ export default function ChatInterface({ chatId }: ChatInterfaceProps) {
     setInput('');
     setSelectedImage(null);
     setPreviewUrl(null);
+    setIsLoading(true);
 
     // Create unique IDs for messages
     const userMessageId = `user-${Date.now()}`;
@@ -212,6 +213,8 @@ export default function ChatInterface({ chatId }: ChatInterfaceProps) {
           ? { ...msg, content: 'Sorry, I encountered an error. Please try again.' }
           : msg
       ));
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -233,8 +236,41 @@ export default function ChatInterface({ chatId }: ChatInterfaceProps) {
   };
 
   return (
-    <div className="flex flex-col h-full">
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+    <div className="flex flex-col h-full bg-gradient-to-b from-slate-900 to-slate-800">
+      {/* Header */}
+      <div className="flex items-center justify-between p-6 border-b border-slate-700/50 bg-slate-900/50 backdrop-blur-sm">
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 bg-gradient-to-r from-cyan-500 to-purple-500 rounded-lg flex items-center justify-center">
+            <Code2 className="w-5 h-5 text-white" />
+          </div>
+          <div>
+            <h1 className="text-lg font-mono font-bold text-white">API Assistant</h1>
+            <p className="text-xs text-slate-400 font-mono">Specialized in API support</p>
+          </div>
+        </div>
+        <div className="flex items-center gap-2">
+          <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+          <span className="text-xs text-slate-400 font-mono">Online</span>
+        </div>
+      </div>
+
+      {/* Messages */}
+      <div className="flex-1 overflow-y-auto p-6 space-y-6">
+        {messages.length === 0 && (
+          <div className="flex flex-col items-center justify-center h-full text-center">
+            <div className="w-20 h-20 bg-gradient-to-r from-cyan-500 to-purple-500 rounded-full flex items-center justify-center mb-6 animate-pulse">
+              <Sparkles className="w-10 h-10 text-white" />
+            </div>
+            <h2 className="text-2xl font-mono font-bold text-white mb-2">
+              Welcome to MeetYourAPI
+            </h2>
+            <p className="text-slate-400 font-mono max-w-md">
+              I'm your AI assistant specialized in API documentation, endpoints, authentication, and troubleshooting. 
+              How can I help you today?
+            </p>
+          </div>
+        )}
+
         {messages.map((message) => (
           <div
             key={message.id}
@@ -243,27 +279,42 @@ export default function ChatInterface({ chatId }: ChatInterfaceProps) {
             }`}
           >
             <div
-              className={`max-w-[80%] rounded-lg p-4 ${
+              className={`max-w-[80%] rounded-2xl p-4 ${
                 message.role === 'user'
-                  ? 'bg-blue-500 text-white'
-                  : 'bg-gray-100 text-gray-900'
+                  ? 'bg-gradient-to-r from-cyan-500 to-purple-500 text-white'
+                  : 'bg-slate-800/50 border border-slate-700/50 text-slate-100 backdrop-blur-sm'
               }`}
             >
               {message.imageUrl && (
-                <div className="mb-2">
+                <div className="mb-3">
                   <img
                     src={message.imageUrl}
                     alt="Uploaded"
-                    className="max-w-full h-auto rounded"
+                    className="max-w-full h-auto rounded-lg border border-slate-600/50"
                   />
                 </div>
               )}
               {message.role === 'assistant' ? (
-                <div className="prose prose-neutral dark:prose-invert max-w-none">
-                  <ReactMarkdown>{message.content}</ReactMarkdown>
+                <div className="prose prose-invert prose-cyan max-w-none">
+                  <ReactMarkdown
+                    components={{
+                      code: ({ children, className }) => (
+                        <code className={`${className} bg-slate-900/50 px-2 py-1 rounded text-cyan-400 font-mono text-sm`}>
+                          {children}
+                        </code>
+                      ),
+                      pre: ({ children }) => (
+                        <pre className="bg-slate-900/50 border border-slate-700/50 p-4 rounded-lg overflow-x-auto">
+                          {children}
+                        </pre>
+                      )
+                    }}
+                  >
+                    {message.content || (isLoading && message.id.includes('assistant') ? 'Thinking...' : '')}
+                  </ReactMarkdown>
                 </div>
               ) : (
-                <p>{message.content}</p>
+                <p className="font-medium">{message.content}</p>
               )}
             </div>
           </div>
@@ -271,22 +322,25 @@ export default function ChatInterface({ chatId }: ChatInterfaceProps) {
         <div ref={messagesEndRef} />
       </div>
 
-      <form onSubmit={handleSubmit} className="p-4 border-t">
-        <div className="flex items-end gap-2">
+      {/* Input Form */}
+      <form onSubmit={handleSubmit} className="p-6 border-t border-slate-700/50 bg-slate-900/50 backdrop-blur-sm">
+        <div className="flex items-end gap-3">
           <div className="flex-1 relative">
             <textarea
               ref={textareaRef}
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={handleKeyDown}
-              placeholder="Type your message..."
-              className="w-full p-3 pr-12 border rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="Ask me about APIs, endpoints, authentication..."
+              className="w-full p-4 pr-12 bg-slate-800/50 border border-slate-700/50 rounded-xl resize-none focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500/50 text-white placeholder-slate-400 font-mono backdrop-blur-sm"
               rows={1}
+              disabled={isLoading}
             />
             <button
               type="button"
               onClick={() => fileInputRef.current?.click()}
-              className="absolute right-2 bottom-2 p-1 text-gray-500 hover:text-gray-700"
+              className="absolute right-3 bottom-3 p-2 text-slate-400 hover:text-cyan-400 hover:bg-slate-700/50 rounded-lg transition-colors"
+              disabled={isLoading}
             >
               <ImageIcon size={20} />
             </button>
@@ -300,18 +354,22 @@ export default function ChatInterface({ chatId }: ChatInterfaceProps) {
           </div>
           <button
             type="submit"
-            disabled={!input.trim() && !selectedImage}
-            className="p-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"
+            disabled={(!input.trim() && !selectedImage) || isLoading}
+            className="p-4 bg-gradient-to-r from-cyan-500 to-purple-500 text-white rounded-xl hover:shadow-lg hover:shadow-cyan-500/25 disabled:opacity-50 disabled:cursor-not-allowed transform hover:-translate-y-0.5 transition-all duration-300"
           >
-            <Send size={20} />
+            {isLoading ? (
+              <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+            ) : (
+              <Send size={20} />
+            )}
           </button>
         </div>
         {previewUrl && (
-          <div className="mt-2 relative inline-block">
+          <div className="mt-3 relative inline-block">
             <img
               src={previewUrl}
               alt="Preview"
-              className="max-h-32 rounded"
+              className="max-h-32 rounded-lg border border-slate-600/50"
             />
             <button
               onClick={() => {
@@ -321,7 +379,7 @@ export default function ChatInterface({ chatId }: ChatInterfaceProps) {
                   fileInputRef.current.value = '';
                 }
               }}
-              className="absolute -top-2 -right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600"
+              className="absolute -top-2 -right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors"
             >
               <X size={16} />
             </button>
@@ -330,4 +388,4 @@ export default function ChatInterface({ chatId }: ChatInterfaceProps) {
       </form>
     </div>
   );
-} 
+}

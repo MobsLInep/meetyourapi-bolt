@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useUser } from '@clerk/nextjs';
+import { X, AlertTriangle } from 'lucide-react';
 
 interface ReportPopupProps {
   isOpen: boolean;
@@ -19,6 +20,7 @@ export default function ReportPopup({ isOpen, onClose, chatId }: ReportPopupProp
   const [selectedOption, setSelectedOption] = useState('');
   const [description, setDescription] = useState('');
   const [error, setError] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const { user } = useUser();
 
   if (!isOpen) return null;
@@ -26,18 +28,24 @@ export default function ReportPopup({ isOpen, onClose, chatId }: ReportPopupProp
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    setIsSubmitting(true);
+
     if (!selectedOption) {
       setError('Please select a reason for reporting.');
+      setIsSubmitting(false);
       return;
     }
     if (description.trim().split(/\s+/).length < 5) {
       setError('Description must be at least 5 words.');
+      setIsSubmitting(false);
       return;
     }
     if (description.length > 2000) {
       setError('Description must be at most 2000 characters.');
+      setIsSubmitting(false);
       return;
     }
+
     try {
       const response = await fetch('/api/reports', {
         method: 'POST',
@@ -56,27 +64,49 @@ export default function ReportPopup({ isOpen, onClose, chatId }: ReportPopupProp
         throw new Error('Failed to submit report');
       }
 
+      // Reset form
+      setSelectedOption('');
+      setDescription('');
       alert('Report submitted successfully!');
       onClose();
     } catch (err) {
       console.error('Error submitting report:', err);
-      alert('Failed to submit report. Please try again.');
+      setError('Failed to submit report. Please try again.');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg p-6 max-w-md w-full">
-        <h2 className="text-xl font-bold mb-4">Report Chat</h2>
-        <form onSubmit={handleSubmit}>
-          <div className="mb-4">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+      <div className="bg-gradient-to-b from-slate-900 to-slate-800 border border-slate-700/50 rounded-2xl p-6 max-w-md w-full shadow-2xl">
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-red-500/20 rounded-lg flex items-center justify-center">
+              <AlertTriangle className="w-6 h-6 text-red-400" />
+            </div>
+            <div>
+              <h2 className="text-xl font-mono font-bold text-white">Report Chat</h2>
+              <p className="text-sm text-slate-400 font-mono">Help us improve our service</p>
+            </div>
+          </div>
+          <button
+            onClick={onClose}
+            className="p-2 text-slate-400 hover:text-white hover:bg-slate-700/50 rounded-lg transition-colors"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label className="block text-sm font-mono font-semibold text-slate-300 mb-2">
               Reason for Report
             </label>
             <select
               value={selectedOption}
               onChange={(e) => setSelectedOption(e.target.value)}
-              className="w-full p-2 border rounded-md"
+              className="w-full p-3 bg-slate-800/50 border border-slate-700/50 rounded-lg text-white font-mono focus:outline-none focus:ring-2 focus:ring-red-500/50 focus:border-red-500/50"
               required
             >
               <option value="">Select a reason</option>
@@ -87,37 +117,52 @@ export default function ReportPopup({ isOpen, onClose, chatId }: ReportPopupProp
               ))}
             </select>
           </div>
-          <div className="mb-4">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Description <span className="text-gray-400">(at least 5 words, max 2000 characters)</span>
+
+          <div>
+            <label className="block text-sm font-mono font-semibold text-slate-300 mb-2">
+              Description
+              <span className="text-slate-500 font-normal ml-2">
+                (at least 5 words, max 2000 characters)
+              </span>
             </label>
             <textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              className="w-full p-2 border rounded-md min-h-[80px]"
+              className="w-full p-3 bg-slate-800/50 border border-slate-700/50 rounded-lg text-white font-mono min-h-[100px] focus:outline-none focus:ring-2 focus:ring-red-500/50 focus:border-red-500/50 resize-none"
               maxLength={2000}
+              placeholder="Please describe the issue in detail..."
               required
             />
-            <div className="text-xs text-gray-500 mt-1">{description.length} / 2000 characters</div>
+            <div className="text-xs text-slate-500 font-mono mt-1 text-right">
+              {description.length} / 2000 characters
+            </div>
           </div>
-          {error && <div className="text-red-600 mb-2 text-sm">{error}</div>}
-          <div className="flex justify-end space-x-2">
+
+          {error && (
+            <div className="p-3 bg-red-500/20 border border-red-500/30 rounded-lg">
+              <p className="text-red-400 text-sm font-mono">{error}</p>
+            </div>
+          )}
+
+          <div className="flex gap-3 pt-2">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 text-gray-600 hover:text-gray-800"
+              className="flex-1 px-4 py-3 text-slate-400 hover:text-white hover:bg-slate-700/50 rounded-lg transition-colors font-mono"
+              disabled={isSubmitting}
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700"
+              disabled={isSubmitting}
+              className="flex-1 px-4 py-3 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-lg hover:shadow-lg hover:shadow-red-500/25 disabled:opacity-50 disabled:cursor-not-allowed transform hover:-translate-y-0.5 transition-all duration-300 font-mono font-semibold"
             >
-              Submit Report
+              {isSubmitting ? 'Submitting...' : 'Submit Report'}
             </button>
           </div>
         </form>
       </div>
     </div>
   );
-} 
+}

@@ -5,6 +5,7 @@ import { redirect } from 'next/navigation';
 import { formatDistanceToNow } from 'date-fns';
 import ReportDetailModal from '@/components/ReportDetailModal';
 import { useState, useEffect, useCallback } from 'react';
+import { Shield, Users, AlertTriangle, TrendingUp, Clock, CheckCircle, XCircle } from 'lucide-react';
 
 // NOTE: Direct database imports are NOT allowed in Client Components.
 // Data fetching functions will use API routes instead.
@@ -195,122 +196,224 @@ export default function AdminPage() {
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'pending':
-        return 'bg-yellow-100 text-yellow-800';
+        return 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30';
       case 'on_process':
-        return 'bg-blue-100 text-blue-800';
+        return 'bg-blue-500/20 text-blue-400 border-blue-500/30';
       case 'resolved':
-        return 'bg-green-100 text-green-800';
+        return 'bg-green-500/20 text-green-400 border-green-500/30';
       default:
-        return 'bg-gray-100 text-gray-800';
+        return 'bg-gray-500/20 text-gray-400 border-gray-500/30';
     }
   };
 
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case 'pending':
+        return <Clock className="w-4 h-4" />;
+      case 'on_process':
+        return <TrendingUp className="w-4 h-4" />;
+      case 'resolved':
+        return <CheckCircle className="w-4 h-4" />;
+      default:
+        return <XCircle className="w-4 h-4" />;
+    }
+  };
+
+  const pendingReports = reports.filter(r => r.status === 'pending').length;
+  const processingReports = reports.filter(r => r.status === 'on_process').length;
+  const resolvedReports = reports.filter(r => r.status === 'resolved').length;
+
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-100">
-        <p className="text-gray-600">Loading admin dashboard...</p>
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 to-slate-800">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-cyan-500/30 border-t-cyan-500 rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-slate-400 font-mono">Loading admin dashboard...</p>
+        </div>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-100">
-        <p className="text-red-500">Error: {error}</p>
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 to-slate-800">
+        <div className="text-center">
+          <XCircle className="w-16 h-16 text-red-400 mx-auto mb-4" />
+          <p className="text-red-400 font-mono">Error: {error}</p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-100 p-8">
-      <div className="max-w-6xl mx-auto">
-        <h1 className="text-3xl font-bold mb-8">Admin Dashboard</h1>
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 text-white">
+      <div className="max-w-7xl mx-auto p-8">
+        {/* Header */}
+        <div className="flex items-center gap-4 mb-8">
+          <div className="w-12 h-12 bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl flex items-center justify-center">
+            <Shield className="w-7 h-7 text-white" />
+          </div>
+          <div>
+            <h1 className="text-4xl font-mono font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
+              Admin Dashboard
+            </h1>
+            <p className="text-slate-400 font-mono">System monitoring and report management</p>
+          </div>
+        </div>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-          <div className="bg-white rounded-lg shadow p-6">
-            <h2 className="text-xl font-semibold mb-4">User Statistics</h2>
-            <div className="bg-blue-50 p-4 rounded-lg">
-              <p className="text-sm text-blue-600 mb-1">Total Registered Users</p>
-              <p className="text-2xl font-bold text-blue-700">{totalUsers}</p>
+        {/* Stats Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <div className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-6 backdrop-blur-sm">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-10 h-10 bg-blue-500/20 rounded-lg flex items-center justify-center">
+                <Users className="w-6 h-6 text-blue-400" />
+              </div>
+              <h3 className="font-mono font-semibold text-slate-300">Total Users</h3>
             </div>
+            <p className="text-3xl font-mono font-bold text-blue-400">{totalUsers}</p>
           </div>
 
-          <div className="bg-white rounded-lg shadow p-6">
-            <h2 className="text-xl font-semibold mb-4">Report Statistics</h2>
-            <div className="bg-red-50 p-4 rounded-lg">
-              <p className="text-sm text-red-600 mb-1">Total Reports</p>
-              <p className="text-2xl font-bold text-red-700">{reports.length}</p>
+          <div className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-6 backdrop-blur-sm">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-10 h-10 bg-red-500/20 rounded-lg flex items-center justify-center">
+                <AlertTriangle className="w-6 h-6 text-red-400" />
+              </div>
+              <h3 className="font-mono font-semibold text-slate-300">Total Reports</h3>
             </div>
+            <p className="text-3xl font-mono font-bold text-red-400">{reports.length}</p>
+          </div>
+
+          <div className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-6 backdrop-blur-sm">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-10 h-10 bg-yellow-500/20 rounded-lg flex items-center justify-center">
+                <Clock className="w-6 h-6 text-yellow-400" />
+              </div>
+              <h3 className="font-mono font-semibold text-slate-300">Pending</h3>
+            </div>
+            <p className="text-3xl font-mono font-bold text-yellow-400">{pendingReports}</p>
+          </div>
+
+          <div className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-6 backdrop-blur-sm">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-10 h-10 bg-green-500/20 rounded-lg flex items-center justify-center">
+                <CheckCircle className="w-6 h-6 text-green-400" />
+              </div>
+              <h3 className="font-mono font-semibold text-slate-300">Resolved</h3>
+            </div>
+            <p className="text-3xl font-mono font-bold text-green-400">{resolvedReports}</p>
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow p-6">
-          <h2 className="text-xl font-semibold p-4 border-b -mx-6 -mt-6 mb-6">Reported Chats</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {reports.map((report) => (
-              <div
-                key={report._id}
-                className="bg-gray-50 rounded-lg shadow-sm hover:shadow-md cursor-pointer flex flex-col transition-all duration-300 ease-in-out"
-              >
-                <div onClick={() => handleOpenModal(report)} className="p-4 flex-1">
-                  <div className="flex justify-between items-center mb-2">
-                    <h3 className="font-semibold text-lg truncate pr-2">Report #{report._id.slice(-6)}</h3>
-                    <span
-                      className={`px-2 py-0.5 rounded-full text-xs font-medium ${
-                        getStatusColor(report.status)
-                      }`}
-                    >
-                      {report.status.toUpperCase()}
-                    </span>
-                  </div>
-                  <p className="text-sm text-gray-700 mb-1 line-clamp-2">Reason: {report.reason}</p>
-                  <p className="text-xs text-gray-500 mb-1">
-                    Description: {report.description?.slice(0, 100)}{report.description && report.description.length > 100 ? '...' : ''}
-                  </p>
-                  <p className="text-xs text-gray-500 mb-1">
-                    Reported by: {report.reportedBy}
-                  </p>
-                  <p className="text-xs text-gray-500">
-                    {formatDistanceToNow(new Date(report.createdAt))} ago
-                  </p>
-                </div>
-                <div className="p-4 border-t bg-white flex flex-wrap gap-2 justify-end">
-                  <button
-                    onClick={() => handleStatusChange(report._id, 'pending')}
-                    className={`px-3 py-1 rounded-md text-xs font-medium ${
-                      report.status === 'pending' ? 'bg-yellow-500 text-white' : 'bg-yellow-100 text-yellow-800 hover:bg-yellow-200'
-                    }`}
-                  >
-                    Pending
-                  </button>
-                  <button
-                    onClick={() => handleStatusChange(report._id, 'on_process')}
-                    className={`px-3 py-1 rounded-md text-xs font-medium ${
-                      report.status === 'on_process' ? 'bg-blue-500 text-white' : 'bg-blue-100 text-blue-800 hover:bg-blue-200'
-                    }`}
-                  >
-                    On Process
-                  </button>
-                  <button
-                    onClick={() => handleStatusChange(report._id, 'resolved')}
-                    className={`px-3 py-1 rounded-md text-xs font-medium ${
-                      report.status === 'resolved' ? 'bg-green-500 text-white' : 'bg-green-100 text-green-800 hover:bg-green-200'
-                    }`}
-                  >
-                    Resolved
-                  </button>
-                  <button
-                    onClick={() => handleDeleteReport(report._id)}
-                    className="px-3 py-1 bg-gray-100 text-red-600 rounded-md text-xs font-medium hover:bg-red-50 hover:text-red-700"
-                  >
-                    Delete
-                  </button>
-                </div>
+        {/* Reports Section */}
+        <div className="bg-slate-800/50 border border-slate-700/50 rounded-xl backdrop-blur-sm">
+          <div className="p-6 border-b border-slate-700/50">
+            <h2 className="text-2xl font-mono font-bold text-white">Reported Chats</h2>
+            <p className="text-slate-400 font-mono mt-1">Manage and review user reports</p>
+          </div>
+          
+          <div className="p-6">
+            {reports.length === 0 ? (
+              <div className="text-center py-12">
+                <AlertTriangle className="w-16 h-16 text-slate-600 mx-auto mb-4" />
+                <p className="text-slate-400 font-mono text-lg">No reports found</p>
+                <p className="text-slate-500 font-mono text-sm">All systems running smoothly</p>
               </div>
-            ))}
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {reports.map((report) => (
+                  <div
+                    key={report._id}
+                    className="bg-slate-900/50 border border-slate-700/50 rounded-xl hover:border-slate-600/50 cursor-pointer transition-all duration-300 hover:transform hover:-translate-y-1"
+                  >
+                    <div onClick={() => handleOpenModal(report)} className="p-6">
+                      <div className="flex justify-between items-start mb-4">
+                        <h3 className="font-mono font-semibold text-cyan-400 truncate pr-2">
+                          Report #{report._id.slice(-6)}
+                        </h3>
+                        <div
+                          className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs font-mono font-semibold border ${
+                            getStatusColor(report.status)
+                          }`}
+                        >
+                          {getStatusIcon(report.status)}
+                          {report.status.replace('_', ' ').toUpperCase()}
+                        </div>
+                      </div>
+                      
+                      <div className="space-y-2 mb-4">
+                        <p className="text-sm text-slate-300 font-mono">
+                          <span className="text-slate-500">Reason:</span> {report.reason}
+                        </p>
+                        <p className="text-xs text-slate-400 font-mono line-clamp-2">
+                          <span className="text-slate-500">Description:</span> {report.description?.slice(0, 100)}{report.description && report.description.length > 100 ? '...' : ''}
+                        </p>
+                        <p className="text-xs text-slate-500 font-mono">
+                          <span className="text-slate-600">By:</span> {report.reportedBy}
+                        </p>
+                        <p className="text-xs text-slate-500 font-mono">
+                          <span className="text-slate-600">Time:</span> {formatDistanceToNow(new Date(report.createdAt))} ago
+                        </p>
+                      </div>
+                    </div>
+                    
+                    <div className="p-4 border-t border-slate-700/50 bg-slate-900/30 flex flex-wrap gap-2">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleStatusChange(report._id, 'pending');
+                        }}
+                        className={`px-3 py-1 rounded-lg text-xs font-mono font-semibold transition-all ${
+                          report.status === 'pending' 
+                            ? 'bg-yellow-500 text-white' 
+                            : 'bg-yellow-500/20 text-yellow-400 hover:bg-yellow-500/30'
+                        }`}
+                      >
+                        Pending
+                      </button>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleStatusChange(report._id, 'on_process');
+                        }}
+                        className={`px-3 py-1 rounded-lg text-xs font-mono font-semibold transition-all ${
+                          report.status === 'on_process' 
+                            ? 'bg-blue-500 text-white' 
+                            : 'bg-blue-500/20 text-blue-400 hover:bg-blue-500/30'
+                        }`}
+                      >
+                        Processing
+                      </button>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleStatusChange(report._id, 'resolved');
+                        }}
+                        className={`px-3 py-1 rounded-lg text-xs font-mono font-semibold transition-all ${
+                          report.status === 'resolved' 
+                            ? 'bg-green-500 text-white' 
+                            : 'bg-green-500/20 text-green-400 hover:bg-green-500/30'
+                        }`}
+                      >
+                        Resolved
+                      </button>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDeleteReport(report._id);
+                        }}
+                        className="px-3 py-1 bg-red-500/20 text-red-400 rounded-lg text-xs font-mono font-semibold hover:bg-red-500/30 transition-all"
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       </div>
+      
       <ReportDetailModal
         report={selectedReport as any}
         isOpen={isModalOpen}
@@ -319,4 +422,4 @@ export default function AdminPage() {
       />
     </div>
   );
-} 
+}
